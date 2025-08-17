@@ -1,0 +1,9 @@
+{
+  "name": "音声ＡＩアシスタント：対話；リアルタイム解析；保存；apiキー入力",
+  "description": "A voice-based conversational AI assistant using Gemini.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "prompt": ""
+}
