@@ -1,4 +1,6 @@
 
+
+
 import { GoogleGenAI } from "@google/genai";
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -252,7 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 };
                 messageParts.push(imagePart);
             }
-            const response = await chat.sendMessage({ parts: messageParts });
+            const response = await chat.sendMessage({ message: { parts: messageParts } });
             
             const modelResponse = response.text.replace(/\*/g, '');
             conversationLog.push({ role: 'model', text: modelResponse });
@@ -317,7 +319,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'NotAllowedError':
                 case 'PermissionDeniedError':
-                    message = "Camera access was denied.";
+                    message = "Camera access was denied. Please go to your browser settings to allow camera permissions for this site.";
                     break;
                 case 'NotReadableError':
                 case 'TrackStartError':
@@ -387,7 +389,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const textPart = { text: combinedPrompt };
             const messageParts = [textPart, imagePart];
 
-            const response = await analysisChat.sendMessage({ parts: messageParts });
+            const response = await analysisChat.sendMessage({ message: { parts: messageParts } });
             
             if (isAnalyzing && status === 'idle') {
                 const newAnalysis = response.text.replace(/\*/g, '');
@@ -516,11 +518,23 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 
         recognition.addEventListener('error', (event) => {
-            if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                console.error('SpeechRecognition Error:', event.error);
-                setErrorState(`Speech recognition failed: ${event.error}.`);
-                isConversationActive = false;
+            if (event.error === 'no-speech' || event.error === 'aborted') {
+                return; // Not a real error, just silence or user action
             }
+
+            console.error('SpeechRecognition Error:', event.error);
+            let errorMessage = `Speech recognition failed: ${event.error}.`;
+
+            if (event.error === 'not-allowed') {
+                errorMessage = "Microphone access was denied. Please go to your browser settings to allow microphone permissions for this site.";
+            } else if (event.error === 'network') {
+                errorMessage = "Speech recognition failed due to a network error. Please check your connection.";
+            } else if (event.error === 'service-not-allowed') {
+                 errorMessage = "Speech recognition service is not allowed. Your browser or network may be blocking it.";
+            }
+            
+            setErrorState(errorMessage);
+            isConversationActive = false;
         });
     } else {
         setErrorState("Speech Recognition API is not supported in this browser.");
